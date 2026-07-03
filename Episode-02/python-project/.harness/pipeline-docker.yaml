@@ -54,9 +54,12 @@ pipeline:
         spec:
           cloneCodebase: true
           runtime:
-            # This uses Local Docker Runner (needs Delegate)
+            # This uses Local Docker Runner (needs Delegate with tag "local-docker-delegate")
+            # Delegate name: linux-amd64
             type: Docker
-            spec: {}
+            spec:
+              delegateSelectors:
+                - local-docker-delegate
           execution:
             steps:
               # ─────────────────────────────────────────────
