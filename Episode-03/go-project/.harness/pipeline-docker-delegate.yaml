@@ -184,7 +184,39 @@ pipeline:
                     dockerfile: Episode-03/go-project/Dockerfile
                     context: Episode-03/go-project
 
-              # Step 8: Check Docker image size
+              # Step 8: Verify image pushed to Docker Hub
+              - step:
+                  type: Run
+                  name: Verify Docker Hub Push
+                  identifier: verify_push
+                  spec:
+                    shell: Sh
+                    image: alpine:latest
+                    command: |-
+                      echo "=== Step 8: Verifying Image on Docker Hub ==="
+                      apk add --no-cache curl > /dev/null 2>&1
+                      echo ""
+                      echo "Checking: <+variable.docker_username>/go-harness-app:<+pipeline.sequenceId>"
+                      STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/<+variable.docker_username>/go-harness-app/tags/<+pipeline.sequenceId>/)
+                      if [ "$STATUS" = "200" ]; then
+                        echo "✅ Image tag <+pipeline.sequenceId> EXISTS on Docker Hub!"
+                      else
+                        echo "❌ Image NOT found (status: $STATUS)"
+                        exit 1
+                      fi
+                      echo ""
+                      echo "Checking: <+variable.docker_username>/go-harness-app:latest"
+                      STATUS2=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/<+variable.docker_username>/go-harness-app/tags/latest/)
+                      if [ "$STATUS2" = "200" ]; then
+                        echo "✅ Image tag latest EXISTS on Docker Hub!"
+                      else
+                        echo "⚠️ latest tag not found (status: $STATUS2)"
+                      fi
+                      echo ""
+                      echo "View: https://hub.docker.com/r/<+variable.docker_username>/go-harness-app"
+                      echo "=== Verification Done! ==="
+
+              # Step 9: Check Docker image size
               - step:
                   type: Run
                   name: Image Size Check
@@ -205,7 +237,7 @@ pipeline:
                       echo "  Final image (alpine + binary) = ~15-20 MB"
                       echo "=== Size Check Done! ==="
 
-              # Step 9: Update rollback data (mark this build as successful)
+              # Step 10: Update rollback data (mark this build as successful)
               - step:
                   type: Run
                   name: Update Rollback Data
@@ -221,7 +253,7 @@ pipeline:
                       echo "If next build fails, we rollback to this tag"
                       echo "=== Updated! ==="
 
-              # Step 10: Final success message
+              # Step 11: Final success message
               - step:
                   type: Run
                   name: Pipeline Complete
