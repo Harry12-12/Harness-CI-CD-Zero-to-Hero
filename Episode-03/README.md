@@ -412,6 +412,11 @@ OR look in URL: app.harness.io/ng/account/XXXXXXXX/...
 7. Screen 5 (Connection Test):
    - Click Test → ✅ Success
 
+**Where this OIDC connector is used:**
+- Episode 6, 7, 10: Deploying to EKS (Harness CD native steps)
+- Episode 4+: Pushing images to ECR (BuildAndPushECR step)
+- NOT used for Terraform CLI (Terraform needs access keys as env vars)
+
 ---
 
 ### Connector 4: Kubernetes — 🆕 CREATE LATER (Episode 6)

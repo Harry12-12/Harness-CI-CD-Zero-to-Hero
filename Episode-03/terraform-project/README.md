@@ -1,4 +1,4 @@
-# Terraform Project — Create AWS Infrastructure (OIDC, No Access Keys!)
+# Terraform Project — Create AWS Infrastructure from Harness Pipeline
 
 ## What This Does
 
@@ -7,7 +7,7 @@ Run pipeline → Choose "apply" → Creates VPC + EC2 in AWS
 Run pipeline → Choose "destroy" → Deletes everything, bill = $0
 ```
 
-No Delegate needed. No AWS Access Keys stored. Uses OIDC!
+No Delegate needed. Uses Harness Cloud.
 
 ---
 
@@ -20,28 +20,7 @@ Harness (clones code using GitHub connector)
     ↓
 Terraform (reads main.tf from cloned code)
     ↓
-AWS (creates VPC + EC2 using OIDC authentication)
-
-Two connectors used:
-  account.Github        → Clones your code from GitHub
-  account.aws_connector → Authenticates to AWS via OIDC (no keys!)
-```
-
----
-
-## Why OIDC Instead of Access Keys?
-
-```
-Access Keys (BAD):
-  - Stored as secrets in Harness
-  - If someone hacks your Harness account → they have your AWS keys
-  - Keys don't expire unless you rotate them manually
-
-OIDC (GOOD):
-  - No keys stored anywhere
-  - Harness proves its identity to AWS directly
-  - Temporary credentials (expire in 1 hour automatically)
-  - Even if hacked, credentials are already expired
+AWS (creates VPC + EC2 using access key credentials)
 ```
 
 ---
@@ -67,67 +46,58 @@ VPC (10.0.0.0/16)
 
 1. Go to AWS Console → S3 → Create bucket
 2. Fill in:
-   - Bucket name: `harness-terraform-project`
+   - Bucket name: `harness-terraform-project` (or any unique name)
    - Region: `us-east-1`
    - Versioning: Enable ✅
 3. Click Create bucket
 
 ---
 
-### Step 2: Create OIDC Provider in AWS
+### Step 2: Get AWS Access Key + Secret Key
 
-1. Go to AWS Console → IAM → Identity providers
-2. Click Add provider
-3. Fill in:
-   - Provider type: OpenID Connect
-   - Provider URL: `https://app.harness.io/ng/api/oidc/account/YOUR_HARNESS_ACCOUNT_ID`
-   - Click "Get thumbprint"
-   - Audience: `sts.amazonaws.com`
-4. Click Add provider
-
----
-
-### Step 3: Create IAM Role for Harness
-
-1. Go to IAM → Roles → Create role
-2. Trusted entity: Web identity
-3. Identity provider: select `app.harness.io/ng/api/oidc/account/...`
-4. Audience: `sts.amazonaws.com`
-5. Click Next
-6. Permissions: AdministratorAccess
-7. Role name: `harness-oidc-role`
-8. Create role
-9. Copy ARN: `arn:aws:iam::YOUR_ACCOUNT_ID:role/harness-oidc-role`
+1. Go to AWS Console → IAM → Users
+2. Click your user → Security credentials tab
+3. Click "Create access key"
+4. Select "Command Line Interface (CLI)"
+5. Copy:
+   - Access key ID: `AKIA...`
+   - Secret access key: `wJalr...`
 
 ---
 
-### Step 4: Create AWS Connector in Harness (OIDC)
+### Step 3: Add Secrets in Harness
 
-1. Account Settings → Connectors → + New Connector → AWS
-2. Name: `aws-connector`
-3. Credentials: Select **Use OIDC**
-4. IAM Role: `arn:aws:iam::YOUR_ACCOUNT_ID:role/harness-oidc-role`
-5. Test Region: `us-east-1`
-6. Backoff: keep defaults
-7. Connectivity: Connect through Harness Platform
-8. Test → ✅
+Go to Project Settings → Secrets → + New Secret → Text
 
----
+**Secret 1:**
+- Name: `aws_access_key_id`
+- Value: paste Access Key ID
+- Save
 
-### Step 5: Add Variables in Harness
-
-Project Settings → Variables:
-
-| Variable | Value |
-|----------|-------|
-| `s3_bucket_name` | `harness-tf-state-YOUR-ACCOUNT-ID` |
-| `aws_region` | `us-east-1` |
-
-No secrets needed! OIDC handles AWS authentication.
+**Secret 2:**
+- Name: `aws_secret_access_key`
+- Value: paste Secret Access Key
+- Save
 
 ---
 
-### Step 6: Import Pipeline
+### Step 4: Add Variables in Harness
+
+Go to Project Settings → Variables → + New Variable
+
+**Variable 1:**
+- Name: `s3_bucket_name`
+- Value: `harness-terraform-project` (your bucket name from Step 1)
+- Save
+
+**Variable 2:**
+- Name: `aws_region`
+- Value: `us-east-1`
+- Save
+
+---
+
+### Step 5: Import Pipeline in Harness
 
 1. Pipelines → Import from Git
 2. Connector: Github
@@ -141,20 +111,24 @@ No secrets needed! OIDC handles AWS authentication.
 ## How to Run
 
 ### CREATE infrastructure:
-1. Run pipeline → tf_action: `apply` → Wait 2 min → Done ✅
+1. Click Run → tf_action: select `apply` → Run Pipeline
+2. Wait 2-3 minutes
+3. Output shows VPC ID + EC2 Public IP ✅
 
 ### DESTROY infrastructure:
-1. Run pipeline → tf_action: `destroy` → Wait 1 min → Bill = $0 ✅
+1. Click Run → tf_action: select `destroy` → Run Pipeline
+2. Wait 1-2 minutes
+3. Output shows "DESTROYED! Bill = $0" ✅
 
 ---
 
 ## Where is the State File?
 
 ```
-S3 bucket: YOUR-BUCKET-NAME
+S3 bucket: harness-terraform-project
 Path: harness-demo/terraform.tfstate
 
-Terraform uses this to know what it created.
+Terraform uses this to track what it created.
 Destroy reads this to know what to delete.
 ```
 
@@ -163,21 +137,30 @@ Destroy reads this to know what to delete.
 ## Cost
 
 ```
-Running: $0 (t2.micro = free tier)
+Running: $0 (t2.micro = free tier, 750 hours/month)
 Destroyed: $0
 ```
 
 ---
 
-## Summary — No Secrets Needed!
+## Summary
 
-| What | Where |
-|------|-------|
-| S3 bucket | AWS Console (manual, once) |
-| OIDC Provider | AWS IAM (manual, once) |
-| IAM Role | AWS IAM (manual, once) |
-| AWS Connector (OIDC) | Harness Connectors |
-| Variable `s3_bucket_name` | Harness Variables |
-| Variable `aws_region` | Harness Variables |
-| ~~aws-access-key~~ | ~~NOT NEEDED~~ ❌ |
-| ~~aws-secret-key~~ | ~~NOT NEEDED~~ ❌ |
+| What | Where | How |
+|------|-------|-----|
+| S3 bucket | AWS Console → S3 | Create manually once |
+| Secret `aws_access_key_id` | Harness → Secrets | Your AWS Access Key ID |
+| Secret `aws_secret_access_key` | Harness → Secrets | Your AWS Secret Key |
+| Variable `s3_bucket_name` | Harness → Variables | Your bucket name |
+| Variable `aws_region` | Harness → Variables | `us-east-1` |
+
+---
+
+## Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| "no valid credential sources" | Check secrets `aws_access_key_id` and `aws_secret_access_key` exist and are correct |
+| "S3 bucket does not exist" | Create the bucket in AWS first (Step 1) |
+| "Access Denied" | Your AWS user needs AdministratorAccess or EC2+VPC+S3 permissions |
+| "Unsupported Terraform version" | Harness Cloud has Terraform 1.3.0, keep `required_version >= 1.3.0` |
+| Destroy says "no state" | Must apply first before you can destroy |

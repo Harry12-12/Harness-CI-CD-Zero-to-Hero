@@ -51,7 +51,7 @@ OIDC way:   GitHub proves its identity to AWS directly (NO keys stored!)
 5. Click Next
 6. Permissions: Select **AdministratorAccess**
 7. Click Next
-8. Role name: `github-actions-role`
+8. Role name: `Harness-CI-CD-Zero-to-Hero-github-actions-role`
 9. Click **Create role**
 
 ### Step 3: Edit Trust Policy (Restrict to Your Repo)

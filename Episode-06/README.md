@@ -594,5 +594,6 @@ execution:
 6. **Health checks** are critical (readiness + liveness probes)
 
 ---
+Harness OIDC connector (aws_account) → Used in Episode 6, 7, 10 for:
 
 > 🎬 Next Episode: [Episode 7 - Helm, Amazon EKS & Amazon ECS Deployment](../Episode-07/README.md)
