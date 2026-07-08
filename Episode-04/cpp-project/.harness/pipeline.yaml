@@ -151,7 +151,28 @@ pipeline:
             spec: {}
           execution:
             steps:
-              # Step 1: Build and Push to Amazon ECR
+              # Step 1: Create ECR Repository (if not exists)
+              - step:
+                  type: Run
+                  name: Create ECR Repo
+                  identifier: create_ecr_repo
+                  spec:
+                    shell: Sh
+                    image: amazon/aws-cli:latest
+                    envVariables:
+                      # These secrets are at PROJECT level (Project Settings → Secrets)
+                      # We created these in Episode 3
+                      AWS_ACCESS_KEY_ID: <+secrets.getValue("aws_access_key_id")>
+                      AWS_SECRET_ACCESS_KEY: <+secrets.getValue("aws_secret_access_key")>
+                      AWS_DEFAULT_REGION: us-east-1
+                    command: |-
+                      echo "=== Creating ECR Repository (if not exists) ==="
+                      aws ecr create-repository \
+                        --repository-name cpp-harness-app \
+                        --region us-east-1 2>/dev/null || echo "Repository already exists"
+                      echo "=== ECR Repo Ready! ==="
+
+              # Step 2: Build and Push to Amazon ECR
               - step:
                   type: BuildAndPushECR
                   name: Push to ECR
