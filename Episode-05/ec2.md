@@ -44,20 +44,23 @@ docker --version
 systemctl status docker
 ```
 
-Now run SonarQube:
+Now run SonarQube (latest Community Build — free, version 26.7.0):
 
 ```bash
-# Pull and run SonarQube container
+# Pull and run SonarQube Community Build (latest free version)
 docker run -d \
   --name sonarqube \
   -p 9000:9000 \
-  sonarqube:lts-community
+  -v sonarqube_data:/opt/sonarqube/data \
+  -v sonarqube_logs:/opt/sonarqube/logs \
+  -v sonarqube_extensions:/opt/sonarqube/extensions \
+  sonarqube:community
 
 # Check if container is running
 docker ps
 
-# Wait 1-2 minutes, then check logs
-docker logs sonarqube | tail -5
+# Wait 2-3 minutes for SonarQube to start, then check logs
+docker logs sonarqube 2>&1 | tail -5
 ```
 
 When you see `SonarQube is operational` in logs → it's ready.
@@ -68,6 +71,16 @@ curl http://localhost:9000
 ```
 
 If you get HTML response → SonarQube is running ✅
+
+**Note:** We use `sonarqube:community` tag (latest free version). The `-v` volumes keep your data safe even if you restart the container.
+
+**SonarQube Docker Tags:**
+| Tag | Version | Free? |
+|-----|---------|-------|
+| `sonarqube:community` | Latest Community Build (26.7.0) | ✅ Free |
+| `sonarqube:lts-community` | Long-Term Support (9.9.9) | ✅ Free |
+| `sonarqube:developer` | Developer Edition | ❌ Paid |
+| `sonarqube:enterprise` | Enterprise Edition | ❌ Paid |
 
 ---
 

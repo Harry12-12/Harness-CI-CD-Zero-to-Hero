@@ -67,7 +67,7 @@ pipeline:
                       echo "=== Testing on Node <+matrix.nodeVersion> ==="
                       node --version
                       cd Episode-05/node-project
-                      npm ci
+                      npm install
                       npx jest --forceExit
                       echo "=== Node <+matrix.nodeVersion> PASSED! ✅ ==="
                   strategy:
@@ -109,9 +109,9 @@ pipeline:
                   spec:
                     shell: Sh
                     command: |-
-                      echo "=== Installing Dependencies (npm ci) ==="
+                      echo "=== Installing Dependencies ==="
                       cd Episode-05/node-project
-                      npm ci
+                      npm install
                       echo "=== Dependencies Installed! ==="
 
               # Step 2-4: PARALLEL execution (Lint + Test + Security scan at same time)
