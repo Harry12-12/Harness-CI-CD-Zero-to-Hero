@@ -7,6 +7,8 @@ describe('App Endpoints', () => {
         expect(res.statusCode).toBe(200);
         expect(res.body.message).toContain('Episode 5');
         expect(res.body.status).toBe('running');
+        expect(res.body.nodeVersion).toBeDefined();
+        expect(res.body.supportedVersions).toEqual(['Node 18', 'Node 20', 'Node 22']);
     });
 
     test('GET /health returns healthy', async () => {

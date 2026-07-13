@@ -358,8 +358,15 @@ DevSecOps:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  DEVSECOPS PIPELINE (5 Stages)                                │
+│  DEVSECOPS PIPELINE (6 Stages)                                │
 │                                                                │
+│  STAGE 0: Matrix Test                                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
+│  │ Node 18  │  │ Node 20  │  │ Node 22  │  ← 3 PARALLEL    │
+│  │ npm+jest │  │ npm+jest │  │ npm+jest │                    │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘                   │
+│       └──────────────┼──────────────┘                         │
+│                      ▼                                         │
 │  STAGE 1: Build & Test                                        │
 │  ┌──────────────────┐                                         │
 │  │ npm ci (cached)  │                                         │
@@ -367,7 +374,6 @@ DevSecOps:
 │           ▼                                                    │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌───────────┐ │
 │  │ Lint Check │ │ Unit Tests │ │ Gitleaks   │ │ SonarQube │ │
-│  │            │ │ + Coverage │ │ (secrets)  │ │ (quality) │ │
 │  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬─────┘ │
 │        └───────────────┼──────────────┼───────────────┘       │
 │                        ▼ PARALLEL                              │
@@ -383,10 +389,7 @@ DevSecOps:
 │  └────────┬────────┘  └────────┬────────────┘                │
 │           └────────┬───────────┘                              │
 │                    ▼ PARALLEL                                  │
-│  ┌──────────────────┐                                         │
-│  │ Security Summary │                                         │
-│  └────────┬─────────┘                                         │
-│           ▼                                                    │
+│                                                                │
 │  STAGE 3: Push to ECR                                         │
 │  ┌──────────────────┐                                         │
 │  │ Create ECR Repo  │                                         │
@@ -407,7 +410,7 @@ DevSecOps:
 │  │ Delete ECR Repo  │                                         │
 │  └──────────────────┘                                         │
 │                                                                │
-│  Result: Secure, tested, scanned image on ECR! 🛡️🚀          │
+│  Result: Tested on 3 versions, scanned, pushed to ECR! 🛡️🚀  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -462,9 +465,14 @@ git push origin master
 2. Select branch: `master`
 3. Click "Run Pipeline"
 
-### Step 4: Watch 5 Stages Execute
+### Step 4: Watch 6 Stages Execute
 
 ```
+Stage 0: Matrix Test (Node 18, 20, 22 — all 3 run in PARALLEL)
+  ├── Node 18-alpine → npm ci + jest ✅
+  ├── Node 20-alpine → npm ci + jest ✅
+  └── Node 22-alpine → npm ci + jest ✅
+
 Stage 1: Build & Test
   ├── Install Dependencies (npm ci — cached)
   ├── PARALLEL:

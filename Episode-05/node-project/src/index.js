@@ -15,8 +15,10 @@ app.get('/', (req, res) => {
     res.json({
         message: 'Harness CI/CD - Episode 5: Advanced CI & DevSecOps',
         version: '1.0.0',
+        nodeVersion: process.version,
         environment: process.env.NODE_ENV || 'development',
-        status: 'running'
+        status: 'running',
+        supportedVersions: ['Node 18', 'Node 20', 'Node 22']
     });
 });
 

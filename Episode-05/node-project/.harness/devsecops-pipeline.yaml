@@ -39,6 +39,46 @@ pipeline:
         build: <+input>
   stages:
     # ============================================
+    # STAGE 0: Matrix Build (Test Multiple Node Versions)
+    # ============================================
+    - stage:
+        name: matrix-test
+        identifier: matrix_test
+        description: "Test app on Node 18, 20, 22 in parallel"
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Test on Multiple Node Versions
+                  identifier: matrix_node_test
+                  spec:
+                    shell: Sh
+                    image: node:<+matrix.nodeVersion>
+                    command: |-
+                      echo "=== Testing on Node <+matrix.nodeVersion> ==="
+                      node --version
+                      cd Episode-05/node-project
+                      npm ci
+                      npx jest --forceExit
+                      echo "=== Node <+matrix.nodeVersion> PASSED! ✅ ==="
+                  strategy:
+                    matrix:
+                      nodeVersion:
+                        - "18-alpine"
+                        - "20-alpine"
+                        - "22-alpine"
+                      maxConcurrency: 3
+
+    # ============================================
     # STAGE 1: Build & Test (with Caching + Parallel)
     # ============================================
     - stage:
