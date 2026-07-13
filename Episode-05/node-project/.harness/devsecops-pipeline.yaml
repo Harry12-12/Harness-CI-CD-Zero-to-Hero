@@ -66,9 +66,11 @@ pipeline:
                     command: |-
                       echo "=== Testing on Node <+matrix.nodeVersion> ==="
                       node --version
-                      cd Episode-05/node-project
+                      # Copy project to unique temp dir (avoid parallel conflicts)
+                      cp -r Episode-05/node-project /tmp/test-project
+                      cd /tmp/test-project
                       rm -rf node_modules package-lock.json
-                      npm install --prefer-offline=false
+                      npm install
                       node node_modules/.bin/jest --forceExit
                       echo "=== Node <+matrix.nodeVersion> PASSED! ✅ ==="
                   strategy:
