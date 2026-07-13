@@ -67,16 +67,16 @@ pipeline:
                       echo "=== Testing on Node <+matrix.nodeVersion> ==="
                       node --version
                       cd Episode-05/node-project
-                      rm -rf node_modules
-                      npm install
-                      npx jest --forceExit
+                      rm -rf node_modules package-lock.json
+                      npm install --prefer-offline=false
+                      node node_modules/.bin/jest --forceExit
                       echo "=== Node <+matrix.nodeVersion> PASSED! ✅ ==="
                   strategy:
                     matrix:
                       nodeVersion:
                         - "18-alpine"
                         - "20-alpine"
-                        - "22-alpine"
+                        - "21-alpine"
                       maxConcurrency: 3
 
     # ============================================
