@@ -67,6 +67,7 @@ pipeline:
                       echo "=== Testing on Node <+matrix.nodeVersion> ==="
                       node --version
                       cd Episode-05/node-project
+                      rm -rf node_modules
                       npm install
                       npx jest --forceExit
                       echo "=== Node <+matrix.nodeVersion> PASSED! ✅ ==="
