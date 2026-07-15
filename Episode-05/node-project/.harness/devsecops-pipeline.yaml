@@ -181,7 +181,7 @@ pipeline:
                       identifier: sonarqube_scan
                       spec:
                         shell: Sh
-                        image: sonarsource/sonar-scanner-cli:latest
+                        image: sonarsource/sonar-scanner-cli:5
                         envVariables:
                           # Create these in Project Settings → Secrets/Variables
                           # sonar_token: Project Settings → Secrets → sonar_token
@@ -189,16 +189,13 @@ pipeline:
                           #   (use http://BASTION-IP:9000 or https://sonarcloud.io)
                           SONAR_TOKEN: <+secrets.getValue("sonar_token")>
                           SONAR_HOST_URL: <+variable.sonar_host_url>
+                          SONAR_USER_HOME: /tmp/.sonar
                         command: |-
                           echo "=== SonarQube: Code Quality & Security Analysis ==="
                           cd Episode-05/node-project
                           sonar-scanner \
-                            -Dsonar.projectKey=harness-devsecops-app \
-                            -Dsonar.sources=src \
                             -Dsonar.host.url=$SONAR_HOST_URL \
-                            -Dsonar.token=$SONAR_TOKEN \
-                            -Dsonar.working.directory=/tmp/.scannerwork \
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info || true
+                            -Dsonar.token=$SONAR_TOKEN || true
                           echo ""
                           echo "=== SonarQube Scan Complete! ==="
                           echo "  View results at: $SONAR_HOST_URL/dashboard?id=harness-devsecops-app"
